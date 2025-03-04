@@ -128,7 +128,7 @@ const FinanceTracker: React.FC = () => {
 
     if (!formData.category) {
       newErrors.category = 'Category is required';
- }
+    }
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -148,28 +148,35 @@ const FinanceTracker: React.FC = () => {
       category: formData.category // Include category in the transaction
     };
     
-    if (editingId) {
-      // Update existing transaction
-      await axios.put(`http://localhost:5000/api/transactions/${editingId}`, newTransaction);
-      setEditingId(null);
-    } else {
-      // Add new transaction
-      await axios.post('http://localhost:5000/api/transactions', newTransaction);
-    }
-    
-    // Reset form
-    setFormData({
-      date: '',
-      amount: '',
-      description: '',
-      category: '' // Reset category
-    });
+    try {
+      // console.log("Editing ID:", editingId); // Log the editing ID
+      if (editingId) {
+        // Update existing transaction
+        const response = await axios.put(`http://localhost:5000/api/transactions/${editingId}`, newTransaction);
+        // console.log("Transaction updated:", response.data); // Log the updated transaction
+        setEditingId(null);
+      } else {
+        // Add new transaction
+        const response = await axios.post('http://localhost:5000/api/transactions', newTransaction);
+        // console.log("Transaction saved:", response.data); // Log the saved transaction
+      }
+      
+      // Reset form
+      setFormData({
+        date: '',
+        amount: '',
+        description: '',
+        category: '' // Reset category
+      });
 
-    // Re-fetch transactions
-    const response = await axios.get('http://localhost:5000/api/transactions');
-    setTransactions(response.data);
+      // Re-fetch transactions
+      const response = await axios.get('http://localhost:5000/api/transactions');
+      setTransactions(response.data);
+    } catch (error) {
+      console.error("Error saving transaction:", error);
+      alert("Failed to save transaction. Please try again."); // Notify the user
+    }
   };
-  
   const handleEdit = (transaction: Transaction) => {
     setFormData({
       date: transaction.date,
@@ -181,20 +188,16 @@ const FinanceTracker: React.FC = () => {
   };
   
   const handleDelete = async (id: string) => {
-    await axios.delete(`http://localhost:5000/api/transactions/${id}`);
-    setTransactions(transactions.filter(transaction => transaction._id !== id));
-    
-    if (editingId === id) {
-      setEditingId(null);
-      setFormData({
-        date: '',
-        amount: '',
-        description: '',
-        category: ''
-      });
+    try {
+      await axios.delete(`http://localhost:5000/api/transactions/${id}`);
+      setTransactions(transactions.filter(transaction => transaction._id !== id));
+      alert("Transaction deleted successfully.");
+    } catch (error) {
+      console.error("Error deleting transaction:", error);
+      alert("Failed to delete transaction. Please try again.");
     }
   };
-  
+
   const cancelEdit = () => {
     setEditingId(null);
     setFormData({
@@ -208,7 +211,7 @@ const FinanceTracker: React.FC = () => {
 
   const totalIncome = transactions.reduce((acc, transaction) => transaction.amount > 0 ? acc + transaction.amount : acc, 0);
   const totalExpenses = transactions.reduce((acc, transaction) => transaction.amount < 0 ? acc + Math.abs(transaction.amount) : acc, 0);
-  const netSavings = totalIncome - totalExpenses;
+  const netSavings = totalIncome - totalExpenses; // Calculate net savings
 
   return (
     <div className="container mx-auto p-4 max-w-5xl">
@@ -381,17 +384,15 @@ const FinanceTracker: React.FC = () => {
                               size="icon" 
                               onClick={() => handleEdit(transaction)}
                             >
-                              <Edit className="h-4 w-4" />
+                              <Edit />
                             </Button>
                             <Button 
                               variant="ghost" 
                               size="icon" 
                               onClick={() => handleDelete(transaction._id)}
-                              className="text-red-500 hover:text-red-700"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 />
                             </Button>
-                          ```tsx
                           </div>
                         </td>
                       </tr>
@@ -400,12 +401,7 @@ const FinanceTracker: React.FC = () => {
               </table>
             </div>
           ) : (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                No transactions found. Add a transaction to get started.
-              </AlertDescription>
-            </Alert>
+            <p className="text-gray-500">No transactions found. Please add some.</p>
           )}
         </CardContent>
       </Card>

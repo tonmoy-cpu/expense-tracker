@@ -16,6 +16,7 @@
     "clsx": "^2.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
+    "expense-tracker": "file:",
     "express": "^4.21.2",
     "lucide-react": "^0.477.0",
     "mongoose": "^8.12.0",
