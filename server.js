@@ -6,26 +6,22 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error(err));
 
-// Define Transaction Schema
 const transactionSchema = new mongoose.Schema({
   date: { type: String, required: true },
   amount: { type: Number, required: true },
   description: { type: String, required: true },
-  category: { type: String, required: true } // Added category field
+  category: { type: String, required: true }
 });
 
 const Transaction = mongoose.model('Transaction', transactionSchema);
 
-// Define Budget Schema
 const budgetSchema = new mongoose.Schema({
   category: { type: String, required: true },
   amount: { type: Number, required: true }
@@ -33,7 +29,6 @@ const budgetSchema = new mongoose.Schema({
 
 const Budget = mongoose.model('Budget', budgetSchema);
 
-// API Routes for Transactions
 app.get('/api/transactions', async (req, res) => {
   try {
     const transactions = await Transaction.find();
@@ -45,11 +40,10 @@ app.get('/api/transactions', async (req, res) => {
 });
 
 app.post('/api/transactions', async (req, res) => {
-  console.log("Incoming transaction data:", req.body); // Log incoming data
   const newTransaction = new Transaction(req.body);
   try {
     const savedTransaction = await newTransaction.save();
-    res.status(201).json(savedTransaction); // Respond with the created transaction
+    res.status(201).json(savedTransaction);
   } catch (error) {
     console.error("Error saving transaction:", error);
     res.status(400).json({ message: "Error saving transaction", error: error.message });
@@ -82,7 +76,6 @@ app.delete('/api/transactions/:id', async (req, res) => {
   }
 });
 
-// API Routes for Budgets
 app.get('/api/budgets', async (req, res) => {
   try {
     const budgets = await Budget.find();
@@ -97,14 +90,13 @@ app.post('/api/budgets', async (req, res) => {
   const newBudget = new Budget(req.body);
   try {
     const savedBudget = await newBudget.save();
-    res.status(201).json(savedBudget); // Respond with the created budget
+    res.status(201).json(savedBudget);
   } catch (error) {
     console.error("Error saving budget:", error);
     res.status(400).json({ message: "Error saving budget", error: error.message });
   }
 });
 
-// Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

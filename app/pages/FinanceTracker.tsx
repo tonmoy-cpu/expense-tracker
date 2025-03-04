@@ -10,18 +10,17 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Trash2, Edit } from 'lucide-react';
 import CategorySelector from '@/components/CategorySelector';
 import PieChart from '@/components/PieChart';
-import SummaryCard from '@/components/SummaryCard';
 
 interface Transaction {
   _id: string;
   date: string;
   amount: number;
   description: string;
-  category: string; // Added category field
+  category: string;
 }
 
 interface Budget {
-  _id?: string; // Optional ID for existing budgets
+  _id?: string;
   category: string;
   amount: number;
 }
@@ -32,20 +31,19 @@ const FinanceTracker: React.FC = () => {
     date: '',
     amount: '',
     description: '',
-    category: '' // Added category to form data
+    category: ''
   });
   
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [editingId, setEditingId] = useState<string | null>(null);
   const [chartData, setChartData] = useState<any[]>([]);
-  const [categoryData, setCategoryData] = useState<Record<string, number>>({}); // For pie chart data
-  const [budgets, setBudgets] = useState<Budget[]>([]); // For category budgets
+  const [categoryData, setCategoryData] = useState<Record<string, number>>({});
+  const [budgets, setBudgets] = useState<Budget[]>([]);
   const [budgetCategory, setBudgetCategory] = useState('');
   const [budgetAmount, setBudgetAmount] = useState('');
 
-  // Fetch transactions and budgets from the server
   useEffect(() => {
-    let isMounted = true; // track whether the component is mounted
+    let isMounted = true;
 
     const fetchTransactions = async () => {
       try {
@@ -73,11 +71,10 @@ const FinanceTracker: React.FC = () => {
     fetchBudgets();
 
     return () => {
-      isMounted = false; // cleanup function to set isMounted to false
+      isMounted = false;
     };
   }, []);
 
-  // Calculate monthly chart data and category data
   useEffect(() => {
     const monthlyData: Record<string, any> = {};
     const categoryBreakdown: Record<string, number> = {};
@@ -86,7 +83,7 @@ const FinanceTracker: React.FC = () => {
       const date = new Date(transaction.date);
       if (isNaN(date.getTime())) {
         console.error("Invalid date:", transaction.date);
-        return; // Skip this transaction if the date is invalid
+        return;
       }
 
       const monthYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
@@ -105,19 +102,18 @@ const FinanceTracker: React.FC = () => {
         monthlyData[monthYear].income += transaction.amount;
       }
 
-      // Update category breakdown
       const category = transaction.category || 'Uncategorized';
       categoryBreakdown[category] = (categoryBreakdown[category] || 0) + transaction.amount;
     });
     
     const sortedData = Object.values(monthlyData).sort((a, b) => {
-      const dateA = new Date(a.month + " 1"); // Append "1" to make it a valid date
-      const dateB = new Date(b.month + " 1"); // Append "1" to make it a valid date
-      return dateA.getTime() - dateB.getTime(); // Compare the timestamps
+      const dateA = new Date(a.month + " 1");
+      const dateB = new Date(b.month + " 1");
+      return dateA.getTime() - dateB.getTime();
     });
     
     setChartData(sortedData);
-    setCategoryData(categoryBreakdown); // Set category data for pie chart
+    setCategoryData(categoryBreakdown);
   }, [transactions]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -127,7 +123,6 @@ const FinanceTracker: React.FC = () => {
       [name]: value
     });
     
-    // Clear error when user fixes the field
     if (errors[name]) {
       setErrors({
         ...errors,
@@ -172,33 +167,29 @@ const FinanceTracker: React.FC = () => {
       date: formData.date,
       amount: parseFloat(formData.amount),
       description: formData.description,
-      category: formData.category // Include category in the transaction
+      category: formData.category
     };
     
     try {
       if (editingId) {
-        // Update existing transaction
         await axios.put(`http://localhost:5000/api/transactions/${editingId}`, newTransaction);
         setEditingId(null);
       } else {
-        // Add new transaction
         await axios.post('http://localhost:5000/api/transactions', newTransaction);
       }
       
-      // Reset form
       setFormData({
         date: '',
         amount: '',
         description: '',
-        category: '' // Reset category
+        category: ''
       });
 
-      // Re-fetch transactions
       const response = await axios.get('http://localhost:5000/api/transactions');
       setTransactions(response.data);
     } catch (error) {
       console.error("Error saving transaction:", error);
-      alert("Failed to save transaction. Please try again."); // Notify the user
+      alert("Failed to save transaction. Please try again.");
     }
   };
 
@@ -207,7 +198,7 @@ const FinanceTracker: React.FC = () => {
       date: transaction.date,
       amount: transaction.amount.toString(),
       description: transaction.description,
-      category: transaction.category // Set category for editing
+      category: transaction.category
     });
     setEditingId(transaction._id);
   };
@@ -218,7 +209,7 @@ const FinanceTracker: React.FC = () => {
       setTransactions(transactions.filter(transaction => transaction._id !== id));
       alert("Transaction deleted successfully.");
     } catch (error) {
- console.error("Error deleting transaction:", error);
+      console.error("Error deleting transaction:", error);
       alert("Failed to delete transaction. Please try again.");
     }
   };
@@ -236,9 +227,8 @@ const FinanceTracker: React.FC = () => {
 
   const totalIncome = transactions.reduce((acc, transaction) => transaction.amount > 0 ? acc + transaction.amount : acc, 0);
   const totalExpenses = transactions.reduce((acc, transaction) => transaction.amount < 0 ? acc + Math.abs(transaction.amount) : acc, 0);
-  const netSavings = totalIncome - totalExpenses; // Calculate net savings
+  const netSavings = totalIncome - totalExpenses;
 
-  // Budget vs Actual Data
   const budgetData = budgets.reduce((acc, budget) => {
     acc[budget.category] = budget.amount;
     return acc;
@@ -255,7 +245,6 @@ const FinanceTracker: React.FC = () => {
     actual: actualData[category] || 0,
   }));
 
-  // Handle budget submission
   const handleBudgetSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (budgetCategory && budgetAmount) {
@@ -273,14 +262,13 @@ const FinanceTracker: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 max-w-5xl">
-      <h1 className="text-3xl font-bold mb-6 text-center">Personal Finance Tracker</h1>
+    <div className="container mx-auto p-4 max-w-5xl bg-gray-50 rounded-lg shadow-lg">
+      <h1 className="text-3xl font-bold mb-6 text-center text-blue-600">Personal Finance Tracker</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        {/* Transaction Form */}
-        <Card>
+        <Card className="transition-transform transform hover:scale-105 duration-300 bg-white shadow-md">
           <CardHeader>
-            <CardTitle>{editingId ? 'Edit Transaction' : 'Add Transaction'}</CardTitle>
+            <CardTitle className="text-blue-600">{editingId ? 'Edit Transaction' : 'Add Transaction'}</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -292,7 +280,7 @@ const FinanceTracker: React.FC = () => {
                   type="date"
                   value={formData.date}
                   onChange={handleInputChange}
-                  className={errors.date ? "border-red-500" : ""}
+                  className={`border ${errors.date ? "border-red-500" : "border-gray-300"} rounded-md transition duration-200`}
                 />
                 {errors.date && (
                   <p className="text-red-500 text-sm">{errors.date}</p>
@@ -308,7 +296,7 @@ const FinanceTracker: React.FC = () => {
                   placeholder="-45.99"
                   value={formData.amount}
                   onChange={handleInputChange}
-                  className={errors.amount ? "border-red-500" : ""}
+                  className={`border ${errors.amount ? "border-red-500" : "border-gray-300"} rounded-md transition duration-200`}
                 />
                 {errors.amount && (
                   <p className="text-red-500 text-sm">{errors.amount}</p>
@@ -324,7 +312,7 @@ const FinanceTracker: React.FC = () => {
                   placeholder="Grocery shopping"
                   value={formData.description}
                   onChange={handleInputChange}
-                  className={errors.description ? "border-red-500" : ""}
+                  className={`border ${errors.description ? "border-red-500" : "border-gray-300"} rounded-md transition duration-200`}
                 />
                 {errors.description && (
                   <p className="text-red-500 text-sm">{errors.description}</p>
@@ -335,28 +323,27 @@ const FinanceTracker: React.FC = () => {
                 <Label htmlFor="category">Category</Label>
                 <CategorySelector onSelect={(category) => setFormData({ ...formData, category })} />
                 {errors.category && (
-                  <p className ="text-red-500 text-sm">{errors.category}</p>
+                  <p className="text-red-500 text-sm">{errors.category}</p>
                 )}
               </div>
               
               <div className="flex gap-2">
-                <Button type="submit" className="w-full">
+                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white transition duration-200">
                   {editingId ? 'Update' : 'Add'} Transaction
                 </Button>
                 {editingId && (
-                  <Button type="button" variant="outline" onClick={cancelEdit}>
+                  <Button type="button" variant="outline" onClick={cancelEdit} className="w-full border border-gray-300 hover:bg-gray-100 transition duration-200">
                     Cancel
- </Button>
+                  </Button>
                 )}
               </div>
             </form>
           </CardContent>
         </Card>
         
-        {/* Monthly Expenses Chart */}
-        <Card>
+        <Card className="transition-transform transform hover:scale-105 duration-300 bg-white shadow-md">
           <CardHeader>
-            <CardTitle>Monthly Summary</CardTitle>
+            <CardTitle className="text-blue-600">Monthly Summary</CardTitle>
           </CardHeader>
           <CardContent className="h-72">
             {chartData.length > 0 ? (
@@ -382,10 +369,9 @@ const FinanceTracker: React.FC = () => {
         </Card>
       </div>
 
-      {/* Budget Setting Form */}
-      <Card>
+      <Card className="transition-transform transform hover:scale-105 duration-300 bg-white shadow-md">
         <CardHeader>
-          <CardTitle>Set Monthly Budgets</CardTitle>
+          <CardTitle className="text-blue-600">Set Monthly Budgets</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleBudgetSubmit} className="space-y-4">
@@ -400,11 +386,11 @@ const FinanceTracker: React.FC = () => {
                 type="number"
                 value={budgetAmount}
                 onChange={(e) => setBudgetAmount(e.target.value)}
-                className={budgetAmount ? "" : "border-red-500"}
+                className={`border ${budgetAmount ? "" : "border-red-500"} rounded-md transition duration-200`}
               />
             </div>
             <div className="flex gap-2">
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white transition duration-200">
                 Set Budget
               </Button>
             </div>
@@ -412,10 +398,9 @@ const FinanceTracker: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Budget vs Actual Comparison Chart */}
-      <Card>
+      <Card className="transition-transform transform hover:scale-105 duration-300 bg-white shadow-md">
         <CardHeader>
-          <CardTitle>Budget vs Actual</CardTitle>
+          <CardTitle className="text-blue-600">Budget vs Actual</CardTitle>
         </CardHeader>
         <CardContent className="h-72">
           {budgets.length > 0 ? (
@@ -440,10 +425,9 @@ const FinanceTracker: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Simple Spending Insights */}
-      <Card>
+      <Card className="transition-transform transform hover:scale-105 duration-300 bg-white shadow-md">
         <CardHeader>
-          <CardTitle>Spending Insights</CardTitle>
+          <CardTitle className="text-blue-600">Spending Insights</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -467,17 +451,16 @@ const FinanceTracker: React.FC = () => {
             </div>
           </div>
           <div className="mt-4">
-            < p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600">
               Average Monthly Spending: <span className="font-bold">${(totalExpenses / (chartData.length || 1)).toFixed(2)}</span>
             </p>
           </div>
         </CardContent>
       </Card>
 
-      {/* Pie Chart for Category Breakdown */}
-      <Card>
+      <Card className="transition-transform transform hover:scale-105 duration-300 bg-white shadow-md">
         <CardHeader>
-          <CardTitle>Category Breakdown</CardTitle>
+          <CardTitle className="text-blue-600">Category Breakdown</CardTitle>
         </CardHeader>
         <CardContent className="h-72">
           {Object.keys(categoryData).length > 0 ? (
@@ -490,10 +473,9 @@ const FinanceTracker: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Transaction List */}
-      <Card>
+      <Card className="transition-transform transform hover:scale-105 duration-300 bg-white shadow-md">
         <CardHeader>
-          <CardTitle>Transactions</CardTitle>
+          <CardTitle className="text-blue-600">Transactions</CardTitle>
         </CardHeader>
         <CardContent>
           {transactions.length > 0 ? (
@@ -512,7 +494,7 @@ const FinanceTracker: React.FC = () => {
                   {transactions
                     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                     .map(transaction => (
-                      <tr key={transaction._id} className="border-t">
+                      <tr key={transaction._id} className="border-t transition-colors duration-200 hover:bg-gray-50">
                         <td className="p-2">
                           {new Date(transaction.date).toLocaleDateString()}
                         </td>
@@ -527,6 +509,7 @@ const FinanceTracker: React.FC = () => {
                               variant="ghost" 
                               size="icon" 
                               onClick={() => handleEdit(transaction)}
+                              className="transition-transform transform hover:scale-110 duration-200"
                             >
                               <Edit />
                             </Button>
@@ -534,6 +517,7 @@ const FinanceTracker: React.FC = () => {
                               variant="ghost" 
                               size="icon" 
                               onClick={() => handleDelete(transaction._id)}
+                              className="transition-transform transform hover:scale-110 duration-200"
                             >
                               <Trash2 />
                             </Button>

@@ -1,12 +1,10 @@
 import { Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, TooltipItem } from 'chart.js';
 
-// Register the necessary components
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-// Define the props type for the PieChart component
 interface PieChartProps {
-    data: Record<string, number>; // Expecting an object with string keys and number values
+    data: Record<string, number>;
 }
 
 const PieChart: React.FC<PieChartProps> = ({ data }) => {
@@ -23,7 +21,7 @@ const PieChart: React.FC<PieChartProps> = ({ data }) => {
                     '#4BC0C0', 
                     '#9966FF', 
                     '#FF6698'
-                ], // Add more colors if needed
+                ],
                 hoverOffset: 4,
             },
         ],
@@ -39,8 +37,8 @@ const PieChart: React.FC<PieChartProps> = ({ data }) => {
                 callbacks: {
                     label: (tooltipItem: TooltipItem<'pie'>) => {
                         const label = tooltipItem.label || '';
-                        const value = tooltipItem.raw as number || 0; // Cast to number
-                        return `${label}: $${value.toFixed(2)}`; // Format the tooltip
+                        const value = tooltipItem.raw as number || 0;
+                        return `${label}: $${value.toFixed(2)}`;
                     },
                 },
             },
