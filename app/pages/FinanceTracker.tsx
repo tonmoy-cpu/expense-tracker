@@ -310,8 +310,8 @@ const FinanceTracker: React.FC = () => {
                   <XAxis dataKey="month" />
                   <YAxis />
                   <Tooltip />
-                  <Bar dataKey="expenses" fill="#ef4444" name="Expenses" />
-                  <Bar dataKey="income" fill="#22c55e" name="Income" />
+                  <Bar dataKey="expenses" fill="#ef4444" name="Income" />
+                  <Bar dataKey="income" fill="#22c55e" name="Expenses" />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -325,9 +325,9 @@ const FinanceTracker: React.FC = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <SummaryCard title="Total Income" value={`$${totalIncome.toFixed(2)}`} />
-        <SummaryCard title="Total Expenses" value={`$${totalExpenses.toFixed(2)}`} />
-        <SummaryCard title="Net Savings" value={`$${netSavings.toFixed(2)}`} />
+        <SummaryCard title="Total Expenses" value={`$${totalIncome.toFixed(2)}`} />
+        {/* <SummaryCard title="Total Expenses" value={`$${totalExpenses.toFixed(2)}`} />
+        <SummaryCard title="Net Savings" value={`$${netSavings.toFixed(2)}`} /> */}
       </div>
 
       {/* Pie Chart for Category Breakdown */}
