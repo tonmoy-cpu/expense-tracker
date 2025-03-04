@@ -128,7 +128,7 @@ const FinanceTracker: React.FC = () => {
 
     if (!formData.category) {
       newErrors.category = 'Category is required';
-    }
+ }
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -205,7 +205,11 @@ const FinanceTracker: React.FC = () => {
     });
     setErrors({});
   };
-  
+
+  const totalIncome = transactions.reduce((acc, transaction) => transaction.amount > 0 ? acc + transaction.amount : acc, 0);
+  const totalExpenses = transactions.reduce((acc, transaction) => transaction.amount < 0 ? acc + Math.abs(transaction.amount) : acc, 0);
+  const netSavings = totalIncome - totalExpenses;
+
   return (
     <div className="container mx-auto p-4 max-w-5xl">
       <h1 className="text-3xl font-bold mb-6 text-center">Personal Finance Tracker</h1>
@@ -269,7 +273,7 @@ const FinanceTracker: React.FC = () => {
                 <Label htmlFor="category">Category</Label>
                 <CategorySelector onSelect={(category) => setFormData({ ...formData, category })} />
                 {errors.category && (
-                  <p className="text-red-500 text-sm">{errors.category}</p>
+                  <p className ="text-red-500 text-sm">{errors.category}</p>
                 )}
               </div>
               
@@ -315,7 +319,30 @@ const FinanceTracker: React.FC = () => {
           </CardContent>
         </Card>
       </div>
-      
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <SummaryCard title="Total Income" value={`$${totalIncome.toFixed(2)}`} />
+        <SummaryCard title="Total Expenses" value={`$${totalExpenses.toFixed(2)}`} />
+        <SummaryCard title="Net Savings" value={`$${netSavings.toFixed(2)}`} />
+      </div>
+
+      {/* Pie Chart for Category Breakdown */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Category Breakdown</CardTitle>
+        </CardHeader>
+        <CardContent className="h-72">
+          {Object.keys(categoryData).length > 0 ? (
+            <PieChart data={categoryData} />
+          ) : (
+            <div className="flex justify-center items-center h-full">
+              <p className="text-gray-500">Add transactions to see category breakdown</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Transaction List */}
       <Card>
         <CardHeader>
@@ -364,6 +391,7 @@ const FinanceTracker: React.FC = () => {
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
+                          ```tsx
                           </div>
                         </td>
                       </tr>
