@@ -25,7 +25,15 @@ const transactionSchema = new mongoose.Schema({
 
 const Transaction = mongoose.model('Transaction', transactionSchema);
 
-// API Routes
+// Define Budget Schema
+const budgetSchema = new mongoose.Schema({
+  category: { type: String, required: true },
+  amount: { type: Number, required: true }
+});
+
+const Budget = mongoose.model('Budget', budgetSchema);
+
+// API Routes for Transactions
 app.get('/api/transactions', async (req, res) => {
   try {
     const transactions = await Transaction.find();
@@ -71,6 +79,28 @@ app.delete('/api/transactions/:id', async (req, res) => {
   } catch (error) {
     console.error("Error deleting transaction:", error);
     res.status(500).json({ message: "Error deleting transaction" });
+  }
+});
+
+// API Routes for Budgets
+app.get('/api/budgets', async (req, res) => {
+  try {
+    const budgets = await Budget.find();
+    res.json(budgets);
+  } catch (error) {
+    console.error("Error fetching budgets:", error);
+    res.status(500).json({ message: "Error fetching budgets" });
+  }
+});
+
+app.post('/api/budgets', async (req, res) => {
+  const newBudget = new Budget(req.body);
+  try {
+    const savedBudget = await newBudget.save();
+    res.status(201).json(savedBudget); // Respond with the created budget
+  } catch (error) {
+    console.error("Error saving budget:", error);
+    res.status(400).json({ message: "Error saving budget", error: error.message });
   }
 });
 

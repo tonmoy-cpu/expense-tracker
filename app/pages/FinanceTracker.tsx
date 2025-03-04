@@ -21,6 +21,7 @@ interface Transaction {
 }
 
 interface Budget {
+  _id?: string; // Optional ID for existing budgets
   category: string;
   amount: number;
 }
@@ -42,7 +43,7 @@ const FinanceTracker: React.FC = () => {
   const [budgetCategory, setBudgetCategory] = useState('');
   const [budgetAmount, setBudgetAmount] = useState('');
 
-  // Fetch transactions from the server
+  // Fetch transactions and budgets from the server
   useEffect(() => {
     let isMounted = true; // track whether the component is mounted
 
@@ -57,7 +58,19 @@ const FinanceTracker: React.FC = () => {
       }
     };
 
+    const fetchBudgets = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/budgets');
+        if (isMounted) {
+          setBudgets(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching budgets:", error);
+      }
+    };
+
     fetchTransactions();
+    fetchBudgets();
 
     return () => {
       isMounted = false; // cleanup function to set isMounted to false
@@ -205,7 +218,7 @@ const FinanceTracker: React.FC = () => {
       setTransactions(transactions.filter(transaction => transaction._id !== id));
       alert("Transaction deleted successfully.");
     } catch (error) {
-      console.error("Error deleting transaction:", error);
+ console.error("Error deleting transaction:", error);
       alert("Failed to delete transaction. Please try again.");
     }
   };
@@ -243,12 +256,19 @@ const FinanceTracker: React.FC = () => {
   }));
 
   // Handle budget submission
-  const handleBudgetSubmit = (e: React.FormEvent) => {
+  const handleBudgetSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (budgetCategory && budgetAmount) {
-      setBudgets([...budgets, { category: budgetCategory, amount: parseFloat(budgetAmount) }]);
-      setBudgetCategory('');
-      setBudgetAmount('');
+      const newBudget = { category: budgetCategory, amount: parseFloat(budgetAmount) };
+      try {
+        await axios.post('http://localhost:5000/api/budgets', newBudget);
+        setBudgets([...budgets, newBudget]);
+        setBudgetCategory('');
+        setBudgetAmount('');
+      } catch (error) {
+        console.error("Error saving budget:", error);
+        alert("Failed to save budget. Please try again.");
+      }
     }
   };
 
@@ -326,7 +346,7 @@ const FinanceTracker: React.FC = () => {
                 {editingId && (
                   <Button type="button" variant="outline" onClick={cancelEdit}>
                     Cancel
-                  </Button>
+ </Button>
                 )}
               </div>
             </form>
@@ -447,7 +467,7 @@ const FinanceTracker: React.FC = () => {
             </div>
           </div>
           <div className="mt-4">
-            <p className="text-sm text-gray-600">
+            < p className="text-sm text-gray-600">
               Average Monthly Spending: <span className="font-bold">${(totalExpenses / (chartData.length || 1)).toFixed(2)}</span>
             </p>
           </div>
