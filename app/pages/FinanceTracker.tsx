@@ -7,8 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { AlertCircle, Trash2, Edit } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Trash2, Edit } from 'lucide-react';
 import CategorySelector from '@/components/CategorySelector';
 import PieChart from '@/components/PieChart';
 import SummaryCard from '@/components/SummaryCard';
@@ -64,6 +63,11 @@ const FinanceTracker: React.FC = () => {
     
     transactions.forEach(transaction => {
       const date = new Date(transaction.date);
+      if (isNaN(date.getTime())) {
+        console.error("Invalid date:", transaction.date);
+        return; // Skip this transaction if the date is invalid
+      }
+
       const monthYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       
       if (!monthlyData[monthYear]) {
@@ -86,7 +90,9 @@ const FinanceTracker: React.FC = () => {
     });
     
     const sortedData = Object.values(monthlyData).sort((a, b) => {
-      return new Date(a.month) - new Date(b.month);
+      const dateA = new Date(a.month + " 1"); // Append "1" to make it a valid date
+      const dateB = new Date(b.month + " 1"); // Append "1" to make it a valid date
+      return dateA.getTime() - dateB.getTime(); // Compare the timestamps
     });
     
     setChartData(sortedData);
@@ -149,16 +155,13 @@ const FinanceTracker: React.FC = () => {
     };
     
     try {
-      // console.log("Editing ID:", editingId); // Log the editing ID
       if (editingId) {
         // Update existing transaction
-        const response = await axios.put(`http://localhost:5000/api/transactions/${editingId}`, newTransaction);
-        // console.log("Transaction updated:", response.data); // Log the updated transaction
+        await axios.put(`http://localhost:5000/api/transactions/${editingId}`, newTransaction);
         setEditingId(null);
       } else {
         // Add new transaction
-        const response = await axios.post('http://localhost:5000/api/transactions', newTransaction);
-        // console.log("Transaction saved:", response.data); // Log the saved transaction
+        await axios.post('http://localhost:5000/api/transactions', newTransaction);
       }
       
       // Reset form
@@ -177,6 +180,7 @@ const FinanceTracker: React.FC = () => {
       alert("Failed to save transaction. Please try again."); // Notify the user
     }
   };
+
   const handleEdit = (transaction: Transaction) => {
     setFormData({
       date: transaction.date,
@@ -366,7 +370,7 @@ const FinanceTracker: React.FC = () => {
                 </thead>
                 <tbody>
                   {transactions
-                    .sort((a, b) => new Date(b.date) - new Date(a.date))
+                    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                     .map(transaction => (
                       <tr key={transaction._id} className="border-t">
                         <td className="p-2">
