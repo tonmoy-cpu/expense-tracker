@@ -19,7 +19,8 @@ mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTop
 const transactionSchema = new mongoose.Schema({
   date: { type: String, required: true },
   amount: { type: Number, required: true },
-  description: { type: String, required: true }
+  description: { type: String, required: true },
+  category: { type: String, required: true } // Added category field
 });
 
 const Transaction = mongoose.model('Transaction', transactionSchema);

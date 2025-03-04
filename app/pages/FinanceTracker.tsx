@@ -9,18 +9,31 @@ import { Label } from '@/components/ui/label';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { AlertCircle, Trash2, Edit } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import CategorySelector from '@/components/CategorySelector';
+import PieChart from '@/components/PieChart';
+import SummaryCard from '@/components/SummaryCard';
 
-const FinanceTracker = () => {
-  const [transactions, setTransactions] = useState([]);
+interface Transaction {
+  _id: string;
+  date: string;
+  amount: number;
+  description: string;
+  category: string; // Added category field
+}
+
+const FinanceTracker: React.FC = () => {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [formData, setFormData] = useState({
     date: '',
     amount: '',
-    description: ''
+    description: '',
+    category: '' // Added category to form data
   });
   
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [chartData, setChartData] = useState([]);
+  const [chartData, setChartData] = useState<any[]>([]);
+  const [categoryData, setCategoryData] = useState<Record<string, number>>({}); // For pie chart data
 
   // Fetch transactions from the server
   useEffect(() => {
@@ -44,9 +57,10 @@ const FinanceTracker = () => {
     };
   }, []);
 
-  // Calculate monthly chart data
+  // Calculate monthly chart data and category data
   useEffect(() => {
-    const monthlyData = {};
+    const monthlyData: Record<string, any> = {};
+    const categoryBreakdown: Record<string, number> = {};
     
     transactions.forEach(transaction => {
       const date = new Date(transaction.date);
@@ -65,6 +79,10 @@ const FinanceTracker = () => {
       } else {
         monthlyData[monthYear].income += transaction.amount;
       }
+
+      // Update category breakdown
+      const category = transaction.category || 'Uncategorized';
+      categoryBreakdown[category] = (categoryBreakdown[category] || 0) + transaction.amount;
     });
     
     const sortedData = Object.values(monthlyData).sort((a, b) => {
@@ -72,9 +90,10 @@ const FinanceTracker = () => {
     });
     
     setChartData(sortedData);
+    setCategoryData(categoryBreakdown); // Set category data for pie chart
   }, [transactions]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
@@ -85,13 +104,13 @@ const FinanceTracker = () => {
     if (errors[name]) {
       setErrors({
         ...errors,
-        [name]: null
+        [name]: ''
       });
     }
   };
   
   const validateForm = () => {
-    const newErrors: any = {};
+    const newErrors: Record<string, string> = {};
     
     if (!formData.date) {
       newErrors.date = 'Date is required';
@@ -105,6 +124,10 @@ const FinanceTracker = () => {
     
     if (!formData.description) {
       newErrors.description = 'Description is required';
+    }
+
+    if (!formData.category) {
+      newErrors.category = 'Category is required';
     }
     
     setErrors(newErrors);
@@ -121,7 +144,8 @@ const FinanceTracker = () => {
     const newTransaction = {
       date: formData.date,
       amount: parseFloat(formData.amount),
-      description: formData.description
+      description: formData.description,
+      category: formData.category // Include category in the transaction
     };
     
     if (editingId) {
@@ -137,7 +161,8 @@ const FinanceTracker = () => {
     setFormData({
       date: '',
       amount: '',
-      description: ''
+      description: '',
+      category: '' // Reset category
     });
 
     // Re-fetch transactions
@@ -145,11 +170,12 @@ const FinanceTracker = () => {
     setTransactions(response.data);
   };
   
-  const handleEdit = (transaction: any) => {
+  const handleEdit = (transaction: Transaction) => {
     setFormData({
       date: transaction.date,
       amount: transaction.amount.toString(),
-      description: transaction.description
+      description: transaction.description,
+      category: transaction.category // Set category for editing
     });
     setEditingId(transaction._id);
   };
@@ -163,7 +189,8 @@ const FinanceTracker = () => {
       setFormData({
         date: '',
         amount: '',
-        description: ''
+        description: '',
+        category: ''
       });
     }
   };
@@ -173,7 +200,8 @@ const FinanceTracker = () => {
     setFormData({
       date: '',
       amount: '',
-      description: ''
+      description: '',
+      category: ''
     });
     setErrors({});
   };
@@ -236,6 +264,14 @@ const FinanceTracker = () => {
                   <p className="text-red-500 text-sm">{errors.description}</p>
                 )}
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="category">Category</Label>
+                <CategorySelector onSelect={(category) => setFormData({ ...formData, category })} />
+                {errors.category && (
+                  <p className="text-red-500 text-sm">{errors.category}</p>
+                )}
+              </div>
               
               <div className="flex gap-2">
                 <Button type="submit" className="w-full">
@@ -293,6 +329,7 @@ const FinanceTracker = () => {
                   <tr className="bg-gray-100">
                     <th className="p-2 text-left">Date</th>
                     <th className="p-2 text-left">Description</th>
+                    <th className="p-2 text-left">Category</th>
                     <th className="p-2 text-right">Amount</th>
                     <th className="p-2 text-center">Actions</th>
                   </tr>
@@ -306,6 +343,7 @@ const FinanceTracker = () => {
                           {new Date(transaction.date).toLocaleDateString()}
                         </td>
                         <td className="p-2">{transaction.description}</td>
+                        <td className="p-2">{transaction.category}</td>
                         <td className={`p-2 text-right font-medium ${transaction.amount < 0 ? 'text-red-500' : 'text-green-500'}`}>
                           ${Math.abs(transaction.amount).toFixed(2)}
                         </td>
