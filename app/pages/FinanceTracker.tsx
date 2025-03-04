@@ -20,6 +20,11 @@ interface Transaction {
   category: string; // Added category field
 }
 
+interface Budget {
+  category: string;
+  amount: number;
+}
+
 const FinanceTracker: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [formData, setFormData] = useState({
@@ -33,6 +38,9 @@ const FinanceTracker: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [chartData, setChartData] = useState<any[]>([]);
   const [categoryData, setCategoryData] = useState<Record<string, number>>({}); // For pie chart data
+  const [budgets, setBudgets] = useState<Budget[]>([]); // For category budgets
+  const [budgetCategory, setBudgetCategory] = useState('');
+  const [budgetAmount, setBudgetAmount] = useState('');
 
   // Fetch transactions from the server
   useEffect(() => {
@@ -217,6 +225,33 @@ const FinanceTracker: React.FC = () => {
   const totalExpenses = transactions.reduce((acc, transaction) => transaction.amount < 0 ? acc + Math.abs(transaction.amount) : acc, 0);
   const netSavings = totalIncome - totalExpenses; // Calculate net savings
 
+  // Budget vs Actual Data
+  const budgetData = budgets.reduce((acc, budget) => {
+    acc[budget.category] = budget.amount;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const actualData = Object.keys(categoryData).reduce((acc, category) => {
+    acc[category] = categoryData[category] || 0;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const budgetVsActualData = Object.keys(budgetData).map(category => ({
+    category,
+    budget: budgetData[category],
+    actual: actualData[category] || 0,
+  }));
+
+  // Handle budget submission
+  const handleBudgetSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (budgetCategory && budgetAmount) {
+      setBudgets([...budgets, { category: budgetCategory, amount: parseFloat(budgetAmount) }]);
+      setBudgetCategory('');
+      setBudgetAmount('');
+    }
+  };
+
   return (
     <div className="container mx-auto p-4 max-w-5xl">
       <h1 className="text-3xl font-bold mb-6 text-center">Personal Finance Tracker</h1>
@@ -314,8 +349,8 @@ const FinanceTracker: React.FC = () => {
                   <XAxis dataKey="month" />
                   <YAxis />
                   <Tooltip />
-                  <Bar dataKey="expenses" fill="#ef4444" name="Income" />
-                  <Bar dataKey="income" fill="#22c55e" name="Expenses" />
+                  <Bar dataKey="expenses" fill="#ef4444" name="Expenses" />
+                  <Bar dataKey="income" fill="#22c55e" name="Income" />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -327,12 +362,97 @@ const FinanceTracker: React.FC = () => {
         </Card>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <SummaryCard title="Total Expenses" value={`$${totalIncome.toFixed(2)}`} />
-        {/* <SummaryCard title="Total Expenses" value={`$${totalExpenses.toFixed(2)}`} />
-        <SummaryCard title="Net Savings" value={`$${netSavings.toFixed(2)}`} /> */}
-      </div>
+      {/* Budget Setting Form */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Set Monthly Budgets</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleBudgetSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="budgetCategory">Category</Label>
+              <CategorySelector onSelect={setBudgetCategory} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="budgetAmount">Budget Amount</Label>
+              <Input
+                id="budgetAmount"
+                type="number"
+                value={budgetAmount}
+                onChange={(e) => setBudgetAmount(e.target.value)}
+                className={budgetAmount ? "" : "border-red-500"}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button type="submit" className="w-full">
+                Set Budget
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Budget vs Actual Comparison Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Budget vs Actual</CardTitle>
+        </CardHeader>
+        <CardContent className="h-72">
+          {budgets.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={budgetVsActualData}
+                margin={{ top: 10, right: 30, left: 0, bottom: 20 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="category" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="budget" fill="#4BC0C0" name="Budget" />
+                <Bar dataKey="actual" fill="#FF6384" name="Actual" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex justify-center items-center h-full">
+              <p className="text-gray-500">Set budgets to see comparison</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Simple Spending Insights */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Spending Insights</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex flex-col items-center p-4 border rounded-lg shadow-md bg-green-100">
+              <div className="text-2xl font-bold text-green-600">
+                ${totalIncome.toFixed(2)}
+              </div>
+              <div className="text-sm text-gray-500">Total Income</div>
+            </div>
+            <div className="flex flex-col items-center p-4 border rounded-lg shadow-md bg-red-100">
+              <div className="text-2xl font-bold text-red-600">
+                ${totalExpenses.toFixed(2)}
+              </div>
+              <div className="text-sm text-gray-500">Total Expenses</div>
+            </div>
+            <div className="flex flex-col items-center p-4 border rounded-lg shadow-md bg-blue-100">
+              <div className="text-2xl font-bold text-blue-600">
+                ${netSavings.toFixed(2)}
+              </div>
+              <div className="text-sm text-gray-500">Net Savings</div>
+            </div>
+          </div>
+          <div className="mt-4">
+            <p className="text-sm text-gray-600">
+              Average Monthly Spending: <span className="font-bold">${(totalExpenses / (chartData.length || 1)).toFixed(2)}</span>
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Pie Chart for Category Breakdown */}
       <Card>
