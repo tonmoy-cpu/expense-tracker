@@ -47,7 +47,7 @@ const FinanceTracker: React.FC = () => {
 
     const fetchTransactions = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/transactions');
+        const response = await axios.get('https://expense-tracker-backend-mw44.onrender.com/api/transactions');
         if (isMounted) {
           setTransactions(response.data);
         }
@@ -58,7 +58,7 @@ const FinanceTracker: React.FC = () => {
 
     const fetchBudgets = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/budgets');
+        const response = await axios.get('https://expense-tracker-backend-mw44.onrender.com/api/budgets');
         if (isMounted) {
           setBudgets(response.data);
         }
@@ -172,10 +172,10 @@ const FinanceTracker: React.FC = () => {
     
     try {
       if (editingId) {
-        await axios.put(`http://localhost:5000/api/transactions/${editingId}`, newTransaction);
+        await axios.put(`https://expense-tracker-backend-mw44.onrender.com/api/transactions/${editingId}`, newTransaction);
         setEditingId(null);
       } else {
-        await axios.post('http://localhost:5000/api/transactions', newTransaction);
+        await axios.post('https://expense-tracker-backend-mw44.onrender.com/api/transactions', newTransaction);
       }
       
       setFormData({
@@ -185,7 +185,7 @@ const FinanceTracker: React.FC = () => {
         category: ''
       });
 
-      const response = await axios.get('http://localhost:5000/api/transactions');
+      const response = await axios.get('https://expense-tracker-backend-mw44.onrender.com/api/transactions');
       setTransactions(response.data);
     } catch (error) {
       console.error("Error saving transaction:", error);
@@ -205,7 +205,7 @@ const FinanceTracker: React.FC = () => {
   
   const handleDelete = async (id: string) => {
     try {
-      await axios.delete(`http://localhost:5000/api/transactions/${id}`);
+      await axios.delete(`https://expense-tracker-backend-mw44.onrender.com/api/transactions/${id}`);
       setTransactions(transactions.filter(transaction => transaction._id !== id));
       alert("Transaction deleted successfully.");
     } catch (error) {
@@ -250,7 +250,7 @@ const FinanceTracker: React.FC = () => {
     if (budgetCategory && budgetAmount) {
       const newBudget = { category: budgetCategory, amount: parseFloat(budgetAmount) };
       try {
-        await axios.post('http://localhost:5000/api/budgets', newBudget);
+        await axios.post('https://expense-tracker-backend-mw44.onrender.com/api/budgets', newBudget);
         setBudgets([...budgets, newBudget]);
         setBudgetCategory('');
         setBudgetAmount('');
