@@ -1,5 +1,4 @@
 "use client";
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -37,7 +36,7 @@ const FinanceTracker: React.FC = () => {
   
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [chartData, setChartData] = useState<any[]>([]);
+  const [chartData, setChartData] = useState<{ month: string; expenses: number; income: number }[]>([]);
   const [categoryData, setCategoryData] = useState<Record<string, number>>({});
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [budgetCategory, setBudgetCategory] = useState('');
@@ -77,7 +76,7 @@ const FinanceTracker: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const monthlyData: Record<string, any> = {};
+    const monthlyData: Record<string, { month: string; expenses: number; income: number }> = {};
     const categoryBreakdown: Record<string, number> = {};
     
     transactions.forEach(transaction => {
@@ -269,7 +268,7 @@ const FinanceTracker: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <Card className="transition-transform transform hover:scale-105 duration-300 bg-white shadow-md">
           <CardHeader>
-            <CardTitle className="text-blue-600">{editingId ? 'Edit Transaction' : 'Add Transaction'}</CardTitle>
+ <CardTitle className="text-blue-600">{editingId ? 'Edit Transaction' : 'Add Transaction'}</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -381,7 +380,7 @@ const FinanceTracker: React.FC = () => {
               <CategorySelector onSelect={setBudgetCategory} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="budgetAmount">Budget Amount</Label>
+              <Label htmlFor="budgetAmount">Budget Amount </Label>
               <Input
                 id="budgetAmount"
                 type="number"
@@ -485,7 +484,7 @@ const FinanceTracker: React.FC = () => {
                 <thead>
                   <tr className="bg-gray-100">
                     <th className="p-2 text-left">Date</th>
-                    <th className="p-2 text-left">Description</th>
+                    <th className=" p-2 text-left">Description</th>
                     <th className="p-2 text-left">Category</th>
                     <th className="p-2 text-right">Amount</th>
                     <th className="p-2 text-center">Actions</th>
