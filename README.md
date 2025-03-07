@@ -41,4 +41,7 @@ A simple web application for tracking personal finances, including income, expen
    ### Start the backend server:
      - node server.js
    ### Start the frontend application: 
+
      - npm run dev
+
+### NOTE: WEBSITE IS TAKING SOMETIME TO LOAD THE DATABASE SO WAIT FEW SECONDS TO LOAD THE DATABASE . THEN YOU CAN USE IT EASILY.
